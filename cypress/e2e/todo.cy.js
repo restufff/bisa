@@ -1,26 +1,49 @@
-describe('API Automation', () => {
-  const baseUrl = 'https://moon.popp.club/moon';
-  const bearerToken = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJSZXN0dSBGYXV6aSBcdUQ4M0VcdUREQjQtNzE5NTM2NTYwNiIsImlhdCI6MTcyMjU5MzIxOCwiZXhwIjoxNzIyNjc5NjE4fQ.f5HTnYxwiUMtQCyn1wH2WpHrMVU_2OPSi4xk5TAJev3C2XOof1T0ZExbgwdmQmhsUSQ7cHBeL_WNNbMg4NvR3Q';
+// cypress/integration/automation_spec.js
 
-  const waitTime = 360000; // 6 minutes in milliseconds
-  const checkInterval = 500; // 0.5 seconds in milliseconds
+describe('API Automation', () => {
+  const baseUrl = 'https://moon.popp.club';
+  let bearerToken;
+
+  const login = () => {
+    return cy.request({
+      method: 'POST',
+      url: `${baseUrl}/pass/login`,
+      body: {
+        initData: "query_id=AAHmkOAsAwAAAOaQ4CwGiz9u&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722701398&hash=06934c2b9e76014929fa956543e779a3b2283b21296b1a43ab2cf65e0a521284",
+        initDataUnSafe: {
+          query_id: "AAHmkOAsAwAAAOaQ4CwGiz9u",
+          user: {
+            id: 7195365606,
+            first_name: "Restu",
+            last_name: "Fauzi 🚀PoPP",
+            username: "restufff",
+            language_code: "en",
+            allows_write_to_pm: true
+          },
+          auth_date: "1722701398",
+          hash: "06934c2b9e76014929fa956543e779a3b2283b21296b1a43ab2cf65e0a521284"
+        }
+      }
+    });
+  };
 
   const hitAsset = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/asset`,
+      url: `${baseUrl}/moon/asset`,
       headers: {
-        Authorization: `Bearer ${bearerToken}`
-      }
+        Authorization: bearerToken
+      },
+      failOnStatusCode: false // Allow handling of non-2xx status codes
     });
   };
 
   const hitClaim = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/claim/farming`,
+      url: `${baseUrl}/moon/claim/farming`,
       headers: {
-        Authorization: `Bearer ${bearerToken}`
+        Authorization: bearerToken
       }
     });
   };
@@ -28,50 +51,53 @@ describe('API Automation', () => {
   const hitFarming = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/farming`,
+      url: `${baseUrl}/moon/farming`,
       headers: {
-        Authorization: `Bearer ${bearerToken}`
+        Authorization: bearerToken
       }
-    });
-  };
-
-  const checkAssetRecursively = () => {
-    return hitAsset().then((response) => {
-      const data = response.body.data;
-
-      // Ensure that 'data' is not null or undefined
-      if (!data) {
-        cy.log('Data is null or undefined, retrying...');
-        return cy.wait(checkInterval).then(() => checkAssetRecursively());
-      }
-
-      const farmingStartTime = data.farmingStartTime;
-
-      cy.log(`Farming Start Time: ${farmingStartTime}`);
-
-      if (farmingStartTime === 0) {
-        return cy.wrap(true); // Indicate that the condition is met
-      } else {
-        cy.log('Farming process ongoing, waiting before checking again...');
-        return cy.wait(checkInterval).then(() => checkAssetRecursively()); // Continue checking
-      }
-    });
-  };
-
-  const automateApiFlow = () => {
-    return checkAssetRecursively().then(() => {
-      return hitClaim().then((claimResponse) => {
-        cy.log('Claim Response Message:', claimResponse.body.msg);
-        return hitFarming().then((farmingResponse) => {
-          cy.log('Farming Response Message:', farmingResponse.body.msg);
-          cy.log(`Waiting for ${waitTime / 60000} minutes...`);
-          return cy.wait(waitTime).then(() => automateApiFlow()); // Wait and then call the function again for infinite loop
-        });
-      });
     });
   };
 
   it('Automates the API flow', () => {
-    automateApiFlow();
+    const checkAsset = () => {
+      hitAsset().then((response) => {
+        if (response.body.code === "400" && response.body.msg === "Login in, please!") {
+          // Login required
+          login().then((loginResponse) => {
+            bearerToken = loginResponse.body.data.token;
+            checkAsset(); // Retry the asset request after login
+          });
+        } else {
+          const data = response.body.data;
+          const farmingStartTime = data.farmingStartTime;
+          const farmingEndTime = data.farmingEndTime;
+          const systemTimestamp = data.systemTimestamp;
+          const currentTime = new Date().getTime();
+
+          cy.log(`Farming Start Time: ${farmingStartTime}, Farming End Time: ${farmingEndTime}`);
+
+          if (farmingStartTime === 0 && farmingEndTime === 0) {
+            // Farming is not in progress, proceed with claim and farming
+            hitClaim().then((claimResponse) => {
+              cy.log('Claim Response:', claimResponse.body.msg);
+              hitFarming().then((farmingResponse) => {
+                cy.log('Farming Response:', farmingResponse.body.msg);
+                cy.wait(360000); // Wait for 6 minutes
+              });
+            });
+          } else {
+            // Farming is in progress
+            const waitDuration = Math.max((farmingEndTime - systemTimestamp) - (currentTime - farmingStartTime), 60000); // Wait for the remaining time or at least 1 minute
+
+            cy.log(`Farming process ongoing, waiting for ${waitDuration / 60000} minutes before checking again...`);
+            cy.wait(waitDuration); // Dynamic wait time
+            checkAsset(); // Recursively check the asset API again
+          }
+        }
+      });
+    };
+
+    // Start the process
+    checkAsset();
   });
 });
