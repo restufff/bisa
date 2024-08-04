@@ -58,46 +58,50 @@ describe('API Automation', () => {
     });
   };
 
-  it('Automates the API flow', () => {
-    const checkAsset = () => {
-      hitAsset().then((response) => {
-        if (response.body.code === "400" && response.body.msg === "Login in, please!") {
-          // Login required
-          login().then((loginResponse) => {
-            bearerToken = loginResponse.body.data.token;
-            checkAsset(); // Retry the asset request after login
+  const checkAsset = () => {
+    hitAsset().then((response) => {
+      if (response.body.code === "400" && response.body.msg === "Login in, please!") {
+        // Login required
+        login().then((loginResponse) => {
+          bearerToken = loginResponse.body.data.token;
+          checkAsset(); // Retry the asset request after login
+        });
+      } else {
+        const data = response.body.data;
+        const farmingStartTime = data.farmingStartTime;
+        const farmingEndTime = data.farmingEndTime;
+        const systemTimestamp = data.systemTimestamp;
+        const currentTime = new Date().getTime();
+
+        cy.log(`Farming Start Time: ${farmingStartTime}, Farming End Time: ${farmingEndTime}`);
+
+        if (farmingStartTime === 0 && farmingEndTime === 0) {
+          // Farming is not in progress, proceed with claim and farming
+          hitClaim().then((claimResponse) => {
+            cy.log('Claim Response:', claimResponse.body.msg);
+            hitFarming().then((farmingResponse) => {
+              cy.log('Farming Response:', farmingResponse.body.msg);
+              cy.wait(360000); // Wait for 6 minutes
+              checkAsset(); // Continue looping
+            });
           });
         } else {
-          const data = response.body.data;
-          const farmingStartTime = data.farmingStartTime;
-          const farmingEndTime = data.farmingEndTime;
-          const systemTimestamp = data.systemTimestamp;
-          const currentTime = new Date().getTime();
+          // Farming is in progress
+          const waitDuration = Math.max((farmingEndTime - systemTimestamp) - (currentTime - farmingStartTime), 100); // Wait for the remaining time or at least 0.1 seconds (100 milliseconds)
 
-          cy.log(`Farming Start Time: ${farmingStartTime}, Farming End Time: ${farmingEndTime}`);
-
-          if (farmingStartTime === 0 && farmingEndTime === 0) {
-            // Farming is not in progress, proceed with claim and farming
-            hitClaim().then((claimResponse) => {
-              cy.log('Claim Response:', claimResponse.body.msg);
-              hitFarming().then((farmingResponse) => {
-                cy.log('Farming Response:', farmingResponse.body.msg);
-                cy.wait(360000); // Wait for 6 minutes
-              });
-            });
-          } else {
-            // Farming is in progress
-            const waitDuration = Math.max((farmingEndTime - systemTimestamp) - (currentTime - farmingStartTime), 60000); // Wait for the remaining time or at least 1 minute
-
-            cy.log(`Farming process ongoing, waiting for ${waitDuration / 60000} minutes before checking again...`);
-            cy.wait(waitDuration); // Dynamic wait time
-            checkAsset(); // Recursively check the asset API again
-          }
+          cy.log(`Farming process ongoing, waiting for ${waitDuration / 1000} seconds before checking again...`);
+          cy.wait(waitDuration); // Dynamic wait time
+          checkAsset(); // Recursively check the asset API again
         }
-      });
-    };
+      }
+    });
+  };
 
-    // Start the process
-    checkAsset();
+  it('Automates the API flow indefinitely', () => {
+    // Perform initial login to get the token
+    login().then((response) => {
+      bearerToken = response.body.data.token;
+      checkAsset(); // Start the infinite loop
+    });
   });
 });
