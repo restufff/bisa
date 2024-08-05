@@ -9,9 +9,9 @@ describe('API Automation', () => {
       method: 'POST',
       url: `${baseUrl}/pass/login`,
       body: {
-        initData: "query_id=AAHmkOAsAwAAAOaQ4CwGiz9u&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722701398&hash=06934c2b9e76014929fa956543e779a3b2283b21296b1a43ab2cf65e0a521284",
+        initData: "query_id=AAHmkOAsAwAAAOaQ4CwMScs0&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722830629&hash=9dac7c55b2f50071ab64a6ecb67ae592f93d62c29b70acf643fa2ceadba13066",
         initDataUnSafe: {
-          query_id: "AAHmkOAsAwAAAOaQ4CwGiz9u",
+          query_id: "AAHmkOAsAwAAAOaQ4CwMScs0",
           user: {
             id: 7195365606,
             first_name: "Restu",
@@ -20,8 +20,8 @@ describe('API Automation', () => {
             language_code: "en",
             allows_write_to_pm: true
           },
-          auth_date: "1722701398",
-          hash: "06934c2b9e76014929fa956543e779a3b2283b21296b1a43ab2cf65e0a521284"
+          auth_date: "1722830629",
+          hash: "9dac7c55b2f50071ab64a6ecb67ae592f93d62c29b70acf643fa2ceadba13066"
         }
       }
     });
