@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - main
+  workflow_run:
+    workflows: ["Cypress Tests"]
+    types:
+      - completed
 
 jobs:
   cypress-run:
@@ -25,7 +29,8 @@ jobs:
         run: npm install
 
       - name: Run Cypress tests
-        run: npx cypress run
+        run: |
+          timeout 5h npx cypress run
 
       - name: Archive test results
         if: always()
