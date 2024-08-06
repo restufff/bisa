@@ -9,9 +9,9 @@ describe('API Automation', () => {
       method: 'POST',
       url: `${baseUrl}/pass/login`,
       body: {
-        initData: "query_id=AAHmkOAsAwAAAOaQ4CzBNy7l&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722918469&hash=e62938d34914392502a27082fea06d9591a9976704e1e0660d3f68e35fcb88fe",
+        initData: "query_id=AAHmkOAsAwAAAOaQ4Cx90c9s&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722965155&hash=7c82a1de217bf0eed5891ee0aaa0a252005b40b0595629b0970afaa627941c98",
         initDataUnSafe: {
-          query_id: "AAHmkOAsAwAAAOaQ4CzBNy7l",
+          query_id: "AAHmkOAsAwAAAOaQ4Cx90c9s",
           user: {
             id: 7195365606,
             first_name: "Restu",
@@ -20,8 +20,8 @@ describe('API Automation', () => {
             language_code: "en",
             allows_write_to_pm: true
           },
-          auth_date: "1722918469",
-          hash: "e62938d34914392502a27082fea06d9591a9976704e1e0660d3f68e35fcb88fe"
+          auth_date: "1722965155",
+          hash: "7c82a1de217bf0eed5891ee0aaa0a252005b40b0595629b0970afaa627941c98"
         }
       }
     });
@@ -58,6 +58,18 @@ describe('API Automation', () => {
     });
   };
 
+  const hitSignIn = () => {
+    return cy.request({
+      method: 'POST',
+      url: `${baseUrl}/moon/sign/in`,
+      headers: {
+        Authorization: bearerToken
+      }
+    }).then((response) => {
+      cy.log('Sign In Response:', response.body.msg);
+    });
+  };
+
   const checkAsset = () => {
     hitAsset().then((response) => {
       if (response.body.code === "400" && response.body.msg === "Login in, please!") {
@@ -74,6 +86,9 @@ describe('API Automation', () => {
         const currentTime = new Date().getTime();
 
         cy.log(`Farming Start Time: ${farmingStartTime}, Farming End Time: ${farmingEndTime}`);
+
+        // Hit the sign-in API and log the response
+        hitSignIn();
 
         if (farmingStartTime === 0 && farmingEndTime === 0) {
           // Farming is not in progress, proceed with claim and farming
