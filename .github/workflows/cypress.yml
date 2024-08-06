@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  schedule:
-    - cron: "0 */5 * * *"
 
 jobs:
   cypress-run:
@@ -27,8 +25,7 @@ jobs:
         run: npm install
 
       - name: Run Cypress tests
-        run: |
-          timeout 5h npx cypress run
+        run: npx cypress run
 
       - name: Archive test results
         if: always()
