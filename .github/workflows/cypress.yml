@@ -27,6 +27,9 @@ jobs:
         run: npm install
 
       - name: Run Cypress tests
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          INIT_DATA: ${{ secrets.INIT_DATA }}
         run: |
           timeout 5h npx cypress run
 

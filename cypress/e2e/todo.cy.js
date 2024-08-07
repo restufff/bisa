@@ -1,29 +1,15 @@
 // cypress/integration/automation_spec.js
 
 describe('API Automation', () => {
-  const baseUrl = 'https://moon.popp.club';
+  const baseUrl = Cypress.env('BASE_URL');
+  const initData = Cypress.env('INIT_DATA');
   let bearerToken;
 
   const login = () => {
     return cy.request({
       method: 'POST',
       url: `${baseUrl}/pass/login`,
-      body: {
-        initData: "query_id=AAHmkOAsAwAAAOaQ4Cx90c9s&user=%7B%22id%22%3A7195365606%2C%22first_name%22%3A%22Restu%22%2C%22last_name%22%3A%22Fauzi%20%F0%9F%9A%80PoPP%22%2C%22username%22%3A%22restufff%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1722965155&hash=7c82a1de217bf0eed5891ee0aaa0a252005b40b0595629b0970afaa627941c98",
-        initDataUnSafe: {
-          query_id: "AAHmkOAsAwAAAOaQ4Cx90c9s",
-          user: {
-            id: 7195365606,
-            first_name: "Restu",
-            last_name: "Fauzi 🚀PoPP",
-            username: "restufff",
-            language_code: "en",
-            allows_write_to_pm: true
-          },
-          auth_date: "1722965155",
-          hash: "7c82a1de217bf0eed5891ee0aaa0a252005b40b0595629b0970afaa627941c98"
-        }
-      }
+      body: JSON.parse(initData)
     });
   };
 
@@ -60,13 +46,43 @@ describe('API Automation', () => {
 
   const hitSignIn = () => {
     return cy.request({
-      method: 'POST',
+      method: 'GET',
       url: `${baseUrl}/moon/sign/in`,
       headers: {
         Authorization: bearerToken
       }
     }).then((response) => {
       cy.log('Sign In Response:', response.body.msg);
+      if (response.body.msg === "success") {
+        // Proceed with the additional tasks if sign-in is successful
+        hitVisitTask().then(() => {
+          hitClaimTask();
+        });
+      }
+    });
+  };
+
+  const hitVisitTask = () => {
+    return cy.request({
+      method: 'GET',
+      url: `${baseUrl}/moon/task/visit/ss`,
+      headers: {
+        Authorization: bearerToken
+      }
+    }).then((response) => {
+      cy.log('Visit Task Response:', response.body.msg);
+    });
+  };
+
+  const hitClaimTask = () => {
+    return cy.request({
+      method: 'GET',
+      url: `${baseUrl}/moon/task/claim?taskId=1`,
+      headers: {
+        Authorization: bearerToken
+      }
+    }).then((response) => {
+      cy.log('Claim Task Response:', response.body.msg);
     });
   };
 
