@@ -1,13 +1,12 @@
 // cypress/integration/automation_spec.js
 
 describe('API Automation', () => {
-  const baseUrl = Cypress.env('BASE_URL');
-  const bearerToken = Cypress.env('BEARER_TOKEN');
+  const bearerToken = Cypress.env('bearerToken');
 
   const hitAsset = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/asset`,
+      url: `/moon/asset`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       },
@@ -18,7 +17,7 @@ describe('API Automation', () => {
   const hitClaim = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/claim/farming`,
+      url: `/moon/claim/farming`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       }
@@ -28,7 +27,7 @@ describe('API Automation', () => {
   const hitFarming = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/farming`,
+      url: `/moon/farming`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       }
@@ -38,7 +37,7 @@ describe('API Automation', () => {
   const hitSignIn = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/sign/in`,
+      url: `/moon/sign/in`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       }
@@ -56,7 +55,7 @@ describe('API Automation', () => {
   const hitVisitTask = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/task/visit/ss`,
+      url: `/moon/task/visit/ss`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       }
@@ -68,7 +67,7 @@ describe('API Automation', () => {
   const hitClaimTask = () => {
     return cy.request({
       method: 'GET',
-      url: `${baseUrl}/moon/task/claim?taskId=1`,
+      url: `/moon/task/claim?taskId=1`,
       headers: {
         Authorization: `Bearer ${bearerToken}`
       }
