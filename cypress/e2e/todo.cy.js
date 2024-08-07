@@ -9,7 +9,7 @@ describe('API Automation', () => {
     return cy.request({
       method: 'POST',
       url: `${baseUrl}/pass/login`,
-      body: JSON.parse(initData)
+      body: `${initData}`
     });
   };
 
